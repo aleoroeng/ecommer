@@ -38,7 +38,7 @@ def add_user():
 
             print(is_user_in_db)
             return str(is_user_in_db)
-        except KeyError: # request.form["key"] throws KeyError if no paramter with said key is sent in request
+        except KeyError: # request.form["key"] throws KeyError if no parameter with said key is sent in request
             print("KeyError occurred")
             return "KeyError"
    
@@ -49,6 +49,10 @@ def get_all_users():
 
     return usersJson
 
+@app.route("/")
+def home_page():
+    return "Hello Jessi"
+    
 if __name__ == "__main__":
     db_interface_users.create_users_table() # create database
     app.run(port=7000)
