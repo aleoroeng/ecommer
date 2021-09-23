@@ -1,11 +1,19 @@
-from flask import Flask, g, request, jsonify
-import db_interface_users # methods for CRUD in users_db
+from flask import Flask, g, request, jsonify, session
+from flask_login import LoginManager
 import sqlite3
 
+from user import User # User class for user table definition
+import db_interface_users # methods for CRUD in users_db
+
 app =  Flask(__name__)
+app.secrectkey = b'\x9dd\x92\x03GLS\x10>hk\xd1\x9a\xa49\xf5'
+
+login_manager = LoginManager()
+login_manager.init_app(app)
 
 STATUS_OK = 200
 
+# 
 def get_db():
     db = getattr(g, "_database", None) # g is the application context object
     if db is None:
@@ -24,12 +32,13 @@ def close_db(exception):
 def add_user():
     
     if request.method == "POST":
-        print(request.form["name"])
-        user = {"name": request.form["name"]} # request has form property to access form data with the input beign 
-        
-        db_interface_users.add_user_to_usersdb(user, get_db())
-        return request.form["name"]
-
+        try:
+            user = User(request.form["first_name"],request.form["last_name"],request.form["username"],request.form["password"]) # request has form property to access form data with the input being
+            print(user)
+            db_interface_users.add_user(user.__dict__, get_db())
+            return "Success"
+        except KeyError:
+            return "KeyError"
     elif request.method == "GET":
         try:
             name = request.form["name"]
@@ -55,4 +64,5 @@ def home_page():
     
 if __name__ == "__main__":
     db_interface_users.create_users_table() # create database
+    #db_interface_users.drop_table("users")
     app.run(port=7000)
