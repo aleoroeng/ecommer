@@ -27,6 +27,9 @@ def add_user(user_dict, connection):
     ''', user_dict)
     connection.commit()
     connection.close()
+    users_tuple = users[0]
+    new_user = User(users_tuple[1], users_tuple[2], users_tuple[3], users_tuple[4])
+    return newUser
 
 def is_user_in_db(user_dict, connection):
     cursor = connection.cursor()
