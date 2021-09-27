@@ -54,9 +54,10 @@ def add_user():
             return "KeyError"
    
 @app.route("/users")
+@jwt_required()
 def get_all_users():
     users = db_interface_users.get_all_users(get_db())
-
+    current_logged_in_user = get_jwt_identity()
     for user in users:
         users_json = User(user[1],user[2],user[3],user[4])
     del users_json.password
