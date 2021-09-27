@@ -1,17 +1,17 @@
 from flask import Flask, g, request, jsonify, session
-from flask_login import LoginManager
 from flask_bcrypt import Bcrypt
+from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity, JWTManager
 import sqlite3
 
 from user import User # User class for user table definition
 import db_interface_users # methods for CRUD in users_db
 
 app =  Flask(__name__)
+app.config["JWT_SECRET_KEY"] = "" #change to secure key at least 32 characters long
+jwt = JWTManager(app)
+
 app.secrectkey = b'\x9dd\x92\x03GLS\x10>hk\xd1\x9a\xa49\xf5'
 bcrypt = Bcrypt(app)
-
-login_manager = LoginManager()
-login_manager.init_app(app)
 
 STATUS_OK = 200
 
@@ -56,23 +56,27 @@ def add_user():
 @app.route("/users")
 def get_all_users():
     users = db_interface_users.get_all_users(get_db())
-    del users.password
-    users_json = users.to_json()
 
-    return users_json
+    for user in users:
+        users_json = User(user[1],user[2],user[3],user[4])
+    del users_json.password
+    return users_json.to_json()
 
 @app.route("/login", methods = ["POST", "GET"])
 def home_page():
 
     if request.method == "POST":
         psswd_from_request = request.form["password"]
+        username_from_request = request.form["username"]
+
         users = db_interface_users.get_all_users(get_db())
         
         for user in users:
-            if bcrypt.check_password_hash(user[4],psswd_from_request):
-                return "Correct password"
+            if bcrypt.check_password_hash(user[4],psswd_from_request) and user[3] == username_from_request:
+                access_token = create_access_token(identity=username_from_request)
+                return jsonify(access_token=access_token)
 
-    return "Incorrect password"
+    return "Incorrect credentials"
     
 if __name__ == "__main__":
     db_interface_users.create_users_table() # create database
